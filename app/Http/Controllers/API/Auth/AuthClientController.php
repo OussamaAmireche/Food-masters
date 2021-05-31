@@ -25,7 +25,7 @@ class AuthClientController extends Controller
             'firstname' => $fields['firstname'],
             'lastname' => $fields['lastname'],
             'email' => $fields['email'],
-            'password' => bcrypt($fields['password']),
+            'password' => Hash::make($fields['password']),
             'phone' => $fields['phone'],
             'adress' => $fields['adress']
         ]);
@@ -72,6 +72,12 @@ class AuthClientController extends Controller
         return [
             'message' => 'Logged out'
         ];
+    }
+
+    public function update(Request $request, $email)
+    {   
+        $client = Client::where('email', $email)->update($request->all());
+        return $client;
     }
 
 }

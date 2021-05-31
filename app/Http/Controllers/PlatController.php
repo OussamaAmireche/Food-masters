@@ -16,9 +16,22 @@ class PlatController extends Controller
     public function index($name)
     {
         return Plat::leftJoin('rating_plat', 'plats.id', '=', 'rating_plat.id_plat')
-                    ->groupBy('id_plat', 'name', 'ingredients', 'name_categorie', 'picture', 'price', 'id_restaurant')
+                    ->join('restaurants', 'plats.id_restaurant', '=', 'restaurants.id')
+                    ->groupBy('plats.id', 'plats.name', 'plats.picture', 'price', 'restaurants.name')
                     ->where('name_categorie', $name)
-                    ->select('name', 'ingredients', 'name_categorie', 'picture', 'price', 'id_restaurant', RatingPlat::raw('AVG(rating)'))
+                    ->orderBy('AVG(rating)', 'desc')
+                    ->select('plats.id', 'plats.name', 'plats.picture', 'price', 'restaurants.name AS restaurant_name', RatingPlat::raw('AVG(rating)'))
+                    ->get(); 
+    }
+
+    public function index2($id)
+    {
+        return Plat::leftJoin('rating_plat', 'plats.id', '=', 'rating_plat.id_plat')
+                    ->join('restaurants', 'plats.id_restaurant', '=', 'restaurants.id')
+                    ->groupBy('plats.id', 'plats.name', 'plats.picture', 'price', 'restaurants.name')
+                    ->where('plats.id_restaurant', $id)
+                    ->orderBy('AVG(rating)', 'desc')
+                    ->select('plats.id', 'plats.name', 'plats.picture', 'price', 'restaurants.name AS restaurant_name', RatingPlat::raw('AVG(rating)'))
                     ->get(); 
     }
 
@@ -59,7 +72,12 @@ class PlatController extends Controller
      */
     public function show($id)
     {
-        return Plat::where('id', $id)->get();
+        return Plat::join('restaurants', 'plats.id_restaurant', '=', 'restaurants.id')
+                    ->leftJoin('rating_plat', 'plats.id', '=', 'rating_plat.id_plat')
+                    ->groupBy('plats.id', 'plats.name', 'ingredients', 'plats.picture', 'price', 'restaurants.id', 'restaurants.name')
+                    ->where('plats.id', $id)
+                    ->select('plats.id', 'plats.name', 'ingredients', 'plats.picture', 'price', 'restaurants.id AS restaurant_id', 'restaurants.name AS restaurant_name', RatingPlat::raw('AVG(rating)'))
+                    ->get();
     }
 
     /**
@@ -89,6 +107,12 @@ class PlatController extends Controller
 
     public function search($name)
     {
-        return Plat::where('name', 'like', '%'.$name.'%')->get();
+        return Plat::leftJoin('rating_plat', 'plats.id', '=', 'rating_plat.id_plat')
+                    ->join('restaurants', 'plats.id_restaurant', '=', 'restaurants.id')
+                    ->groupBy('plats.id', 'plats.name', 'plats.picture', 'price', 'restaurants.name')
+                    ->where('name', 'like', '%'.$name.'%')
+                    ->orderBy('AVG(rating)', 'desc')
+                    ->select('plats.id', 'plats.name', 'plats.picture', 'price', 'restaurants.name AS restaurant_name', RatingPlat::raw('AVG(rating)'))
+                    ->get();
     }
 }

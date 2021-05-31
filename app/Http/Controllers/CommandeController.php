@@ -13,9 +13,12 @@ class CommandeController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($id)
     {
-        
+        return Commande::Join('commande_plat', 'commande.id', '=' , 'commande_plat.commande_id')
+                        ->where('id_restaurant', $id)
+                        ->where('state', 'en attente')
+                        ->get();
     }
 
     /**
@@ -66,11 +69,27 @@ class CommandeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($email)
     {
-        //
+        return Commande::Join('commande_plat', 'commande.id', '=' , 'commande_plat.commande_id')
+                        ->Join('plats', 'plats.id', '=', 'commande_plat.plat_id')
+                        ->Join('restaurants', 'restaurants.id', '=', 'commande.id_restaurant')
+                        ->where('email_client', $email)
+                        ->where('state', '<>', 'en attente')
+                        ->select('restaurants.name AS name_restaurant', 'state', 'quantité', 'date', 'plats.name AS name_plat', 'plats.picture AS picture_plat')
+                        ->get();
     }
 
+    public function en_attente($email)
+    {
+        return Commande::Join('commande_plat', 'commande.id', '=' , 'commande_plat.commande_id')
+                        ->Join('plats', 'plats.id', '=', 'commande_plat.plat_id')
+                        ->Join('restaurants', 'restaurants.id', '=', 'commande.id_restaurant')
+                        ->where('email_client', $email)
+                        ->where('state', 'en attente')
+                        ->select('restaurants.name AS name_restaurant', 'state', 'quantité', 'date', 'plats.name AS name_plat', 'plats.picture AS picture_plat')
+                        ->get();
+    }
     /**
      * Update the specified resource in storage.
      *
@@ -78,9 +97,16 @@ class CommandeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function accept($id)
     {
-        //
+        $commande = Commande::where('id', $id)->update(array('state' => 'accepté'));
+        return $commande;
+    }
+
+    public function refuser($id)
+    {
+        $commande = Commande::where('id', $id)->update(array('state' => 'refusé'));
+        return $commande;
     }
 
     /**
@@ -91,6 +117,8 @@ class CommandeController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $commande_plat_annulé = CommandePlat::where('commande_id', $id)->delete();
+        $commande_annulé = Commande::destroy($id);
+        return [$commande_plat_annulé, $commande_annulé];
     }
 }

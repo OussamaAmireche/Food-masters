@@ -18,5 +18,6 @@ class CommandePlat extends Model
     protected $fillable = [
         'plat_id',
         'quantité',
+        'commande_id',
     ];
 }

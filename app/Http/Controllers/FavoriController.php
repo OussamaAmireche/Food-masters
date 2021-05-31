@@ -46,7 +46,11 @@ class FavoriController extends Controller
      */
     public function show($email)
     {
-        return Favori::where('email_client', $email)->get();
+        return Favori::where('email_client', $email)
+                    ->join('plats', 'plats.id', '=', 'favoris.id_plat')
+                    ->join('restaurants', 'restaurants.id', '=', 'plats.id_restaurant')
+                    ->select('id_plat', 'plats.name AS name_plat', 'restaurants.name AS name_restaurant', 'plats.picture AS picture')
+                    ->get();
     }
 
     /**

@@ -17,7 +17,7 @@ class RestaurantController extends Controller
     {
         return Restaurant::leftJoin('rating_restaurant', 'restaurants.id', '=', 'rating_restaurant.id_restaurant')
                     ->groupBy('id_restaurant', 'name', 'workhours', 'adress', 'picture', 'email_gestionnaire', 'phone')
-                    ->select('name', 'workhours', 'adress', 'picture', 'email_gestionnaire', 'phone', RatingRestaurant::raw('AVG(rating)'))
+                    ->select('id_restaurant', 'name', 'workhours', 'adress', 'picture', 'email_gestionnaire', 'phone', RatingRestaurant::raw('AVG(rating)'))
                     ->get(); 
     }
 
