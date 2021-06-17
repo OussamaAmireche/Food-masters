@@ -28,7 +28,7 @@ class RatingRestaurantController extends Controller
         $fields = $request->validate([
             'email_client' => 'required|string',
             'id_restaurant' => 'required|integer',
-            'rating' => 'required|integer'
+            'rating' => 'required|numeric'
         ]);
 
         $rating_restaurant = RatingRestaurant::create([

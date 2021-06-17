@@ -16,9 +16,11 @@ class AuthClientController extends Controller
             'email' => 'required|string|unique:clients,email',
             'firstname' => 'required|string',
             'lastname' => 'required|string',
-            'phone' => 'required|int|unique:clients,phone',
+            'phone' => 'required|integer|unique:clients,phone',
             'password' => 'required|string|confirmed',
-            'adress' => 'required'
+            'longitude' => 'required',
+            'latitude' => 'required',
+            'delivery_adress' => 'required',
         ]);
 
         $client = Client::create([
@@ -27,7 +29,9 @@ class AuthClientController extends Controller
             'email' => $fields['email'],
             'password' => Hash::make($fields['password']),
             'phone' => $fields['phone'],
-            'adress' => $fields['adress']
+            'longitude' => $fields['longitude'],
+            'latitude' => $fields['latitude'],
+            'delivery_adress' => $fields['delivery_adress'],
         ]);
 
         $token = $client->createToken('clienttoken', ['role:client'])->plainTextToken;
@@ -75,8 +79,39 @@ class AuthClientController extends Controller
     }
 
     public function update(Request $request, $email)
-    {   
-        $client = Client::where('email', $email)->update($request->all());
+    {
+        $fields = $request->validate([
+            'firstname' => 'required|string',
+            'lastname' => 'required|string',
+            'phone' => 'required|integer',
+            'password' => 'required|string',
+            'oldpassword' => 'required|string',
+        ]);
+
+        // Check email
+        $client = Client::where('email', $email)->first();
+
+        // Check password
+        if(!$client || !Hash::check($fields['oldpassword'], $client->password)) {
+            return response([
+                'message' => 'informations incorrectes'
+            ], 401);
+        }
+
+        $client = Client::where('email', $email)->update(array(
+            'firstname' => $fields['firstname'],
+            'lastname' => $fields['lastname'],
+            'phone' => $fields['phone'],
+            'password' =>  Hash::make($fields['password']),
+        ));
+        return $client;
+    }
+
+    public function show($email)
+    {
+        $client = Client::where('email', $email)
+                        ->select('firstname', 'lastname', 'phone', 'email')
+                        ->get();
         return $client;
     }
 

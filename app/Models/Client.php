@@ -24,6 +24,9 @@ class Client extends Authenticatable
         'password',
         'adress',
         'phone',
+        'longitude',
+        'latitude',
+        'delivery_adress',
     ];
 
     /**

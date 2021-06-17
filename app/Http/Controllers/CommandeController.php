@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Commande;
 use App\Models\CommandePlat;
+use DB;
 
 class CommandeController extends Controller
 {
@@ -16,8 +17,11 @@ class CommandeController extends Controller
     public function index($id)
     {
         return Commande::Join('commande_plat', 'commande.id', '=' , 'commande_plat.commande_id')
-                        ->where('id_restaurant', $id)
+                        ->Join('clients', 'commande.email_client', '=', 'clients.email')
+                        ->Join('plats', 'commande_plat.plat_id', '=', 'plats.id')
+                        ->where('commande.id_restaurant', $id)
                         ->where('state', 'en attente')
+                        ->select('commande.id', 'plats.name', 'commande_plat.quantité', 'commande.longitude', 'commande.latitude', 'commande.date', DB::raw('(plats.price * commande_plat.quantité) AS price'), 'clients.firstname', 'clients.lastname', 'commande.adress')
                         ->get();
     }
 
@@ -33,9 +37,10 @@ class CommandeController extends Controller
             'date' => 'required|date_format:Y-m-d H:i:s',
             'email_client' => 'required|string',
             'id_restaurant' => 'required|integer',
-            'state' => 'required|string',
             'payment_method' => 'required|string',
-            'delivery_adress' => 'required|string',
+            'longitude' => 'required',
+            'latitude' => 'required',
+            'adress' => 'required',
             'plat_id' => 'required|integer',
             'quantité' => 'required|integer',
         ]);
@@ -43,10 +48,12 @@ class CommandeController extends Controller
         $commande = Commande::create([
             'date' => $fields['date'],
             'email_client' => $fields['email_client'],
-            'state' => $fields['state'],
+            'state' => 'en attente',
             'payment_method' => $fields['payment_method'],
             'id_restaurant' => $fields['id_restaurant'],
-            'delivery_adress' => $fields['delivery_adress'],
+            'longitude' => $fields['longitude'],
+            'latitude' => $fields['latitude'],
+            'adress' => $fields['adress']
         ]);
 
         $fields['commande_id'] = $commande->id;
@@ -76,7 +83,7 @@ class CommandeController extends Controller
                         ->Join('restaurants', 'restaurants.id', '=', 'commande.id_restaurant')
                         ->where('email_client', $email)
                         ->where('state', '<>', 'en attente')
-                        ->select('restaurants.name AS name_restaurant', 'state', 'quantité', 'date', 'plats.name AS name_plat', 'plats.picture AS picture_plat')
+                        ->select('commande.id AS commande_id', 'restaurants.name AS name_restaurant', 'state', 'quantité', 'date', 'plats.name AS name_plat', 'plats.picture AS picture_plat')
                         ->get();
     }
 
@@ -87,7 +94,31 @@ class CommandeController extends Controller
                         ->Join('restaurants', 'restaurants.id', '=', 'commande.id_restaurant')
                         ->where('email_client', $email)
                         ->where('state', 'en attente')
-                        ->select('restaurants.name AS name_restaurant', 'state', 'quantité', 'date', 'plats.name AS name_plat', 'plats.picture AS picture_plat')
+                        ->select('commande.id AS commande_id', 'restaurants.name AS name_restaurant', 'state', 'quantité', 'date', 'plats.name AS name_plat', 'plats.picture AS picture_plat')
+                        ->get();
+    }
+
+    public function en_attente_gestionnaire($id)
+    {
+        return Commande::Join('commande_plat', 'commande.id', '=' , 'commande_plat.commande_id')
+                        ->Join('plats', 'plats.id', '=', 'commande_plat.plat_id')
+                        ->Join('restaurants', 'restaurants.id', '=', 'commande.id_restaurant')
+                        ->Join('clients', 'commande.email_client', '=', 'clients.email')
+                        ->where('commande.id_restaurant', $id)
+                        ->where('state', 'en attente')
+                        ->select('commande.longitude', 'commande.latitude', 'firstname', 'lastname', 'quantité', 'date', 'plats.name AS name_plat', 'price')
+                        ->get();
+    }
+
+    public function show_gestionnaire($id)
+    {
+        return Commande::Join('commande_plat', 'commande.id', '=' , 'commande_plat.commande_id')
+                        ->Join('plats', 'plats.id', '=', 'commande_plat.plat_id')
+                        ->Join('restaurants', 'restaurants.id', '=', 'commande.id_restaurant')
+                        ->Join('clients', 'commande.email_client', '=', 'clients.email')
+                        ->where('commande.id_restaurant', $id)
+                        ->where('state', '<>', 'en attente')
+                        ->select('delivery_adress', 'firstname', 'lastname', 'quantité', 'date', 'plats.name AS name_plat', 'price', 'state')
                         ->get();
     }
     /**
@@ -115,10 +146,10 @@ class CommandeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function annuler($id)
     {
-        $commande_plat_annulé = CommandePlat::where('commande_id', $id)->delete();
-        $commande_annulé = Commande::destroy($id);
-        return [$commande_plat_annulé, $commande_annulé];
+        $commande = Commande::where('id', $id)->update(array('state' => 'annulé'));
+        return $commande;
     }
+
 }

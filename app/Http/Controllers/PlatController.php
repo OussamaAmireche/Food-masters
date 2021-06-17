@@ -17,10 +17,10 @@ class PlatController extends Controller
     {
         return Plat::leftJoin('rating_plat', 'plats.id', '=', 'rating_plat.id_plat')
                     ->join('restaurants', 'plats.id_restaurant', '=', 'restaurants.id')
-                    ->groupBy('plats.id', 'plats.name', 'plats.picture', 'price', 'restaurants.name')
+                    ->groupBy('plats.id', 'plats.name', 'plats.picture', 'price', 'restaurants.name', 'ingredients', 'restaurants.id')
                     ->where('name_categorie', $name)
                     ->orderBy('AVG(rating)', 'desc')
-                    ->select('plats.id', 'plats.name', 'plats.picture', 'price', 'restaurants.name AS restaurant_name', RatingPlat::raw('AVG(rating)'))
+                    ->select('plats.id', 'plats.name', 'plats.picture', 'price', 'ingredients', 'restaurants.name AS restaurant_name', 'restaurants.id AS id_restaurant', RatingPlat::raw('AVG(rating)'))
                     ->get(); 
     }
 
@@ -28,10 +28,10 @@ class PlatController extends Controller
     {
         return Plat::leftJoin('rating_plat', 'plats.id', '=', 'rating_plat.id_plat')
                     ->join('restaurants', 'plats.id_restaurant', '=', 'restaurants.id')
-                    ->groupBy('plats.id', 'plats.name', 'plats.picture', 'price', 'restaurants.name')
+                    ->groupBy('plats.id', 'plats.name', 'plats.picture', 'plats.ingredients', 'price', 'restaurants.name')
                     ->where('plats.id_restaurant', $id)
                     ->orderBy('AVG(rating)', 'desc')
-                    ->select('plats.id', 'plats.name', 'plats.picture', 'price', 'restaurants.name AS restaurant_name', RatingPlat::raw('AVG(rating)'))
+                    ->select('plats.id', 'plats.name', 'plats.picture', 'plats.ingredients', 'price', 'restaurants.name AS restaurant_name', RatingPlat::raw('AVG(rating)'))
                     ->get(); 
     }
 
@@ -47,21 +47,31 @@ class PlatController extends Controller
             'name' => 'required|string',
             'price' => 'required|numeric',
             'id_restaurant' => 'required|integer',
-            'picture' => 'required|string',
             'ingredients' => 'string',
             'name_categorie' => 'required|string',
         ]);
 
-        $plat = Plat::create([
-            'name' => $fields['name'],
-            'picture' => $fields['picture'],
-            'name_categorie' => $fields['name_categorie'],
-            'price' => $fields['price'],
-            'id_restaurant' => $fields['id_restaurant'],
-            'ingredients' => $fields['ingredients'],
-        ]);
+        if ($request->hasFile('file')) {
 
-        return response($plat, 201);
+            $request->validate([
+                'image' => 'mimes:jpeg,bmp,png,jpg' 
+            ]);
+
+            $request->file->store('images', 'public');
+
+        }
+
+            $plat = Plat::create([
+                'name' => $fields['name'],
+                // 'picture' => $request->file->hashName(),
+                'name_categorie' => $fields['name_categorie'],
+                'price' => $fields['price'],
+                'id_restaurant' => $fields['id_restaurant'],
+                'ingredients' => $fields['ingredients'],
+            ]);
+
+            return response($plat, 201);
+        
     }
 
     /**
@@ -89,8 +99,32 @@ class PlatController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $plat = Plat::find($id);
-        $plat->update($request->all());
+
+        $fields = $request->validate([
+            'name' => 'required|string',
+            'ingredients' => 'required|string',
+            'price' => 'required|numeric',
+        ]);
+
+        if ($request->hasFile('file')) {
+
+            $request->validate([
+                'image' => 'mimes:jpeg,bmp,png,jpg' 
+            ]);
+
+            $request->file->store('images', 'public');
+
+            $plat = Plat::where('id', $id)->update(array(
+                'picture' => $request->file->hashName(),
+            ));
+        
+        }
+
+        $plat = Plat::where('id', $id)->update(array(
+            'name' => $fields['name'],
+            'ingredients' => $fields['ingredients'],
+            'price' => $fields['price'],
+        ));
         return $plat;
     }
 

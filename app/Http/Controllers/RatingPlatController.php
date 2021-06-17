@@ -28,7 +28,7 @@ class RatingPlatController extends Controller
         $fields = $request->validate([
             'email_client' => 'required|string',
             'id_plat' => 'required|integer',
-            'rating' => 'required|integer'
+            'rating' => 'required|numeric'
         ]);
 
         $rating_plat = RatingPlat::create([

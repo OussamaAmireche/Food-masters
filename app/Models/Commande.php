@@ -21,6 +21,8 @@ class Commande extends Model
         'id_restaurant',
         'state',
         'payment_method',
-        'delivery_adress',
+        'longitude',
+        'latitude',
+        'adress'
     ];
 }

@@ -22,7 +22,6 @@ class Gestionnaire extends Authenticatable
         'lastname',
         'email',
         'password',
-        'id_restaurant',
         'phone',
     ];
 

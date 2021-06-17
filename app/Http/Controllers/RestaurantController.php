@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Restaurant;
+use App\Models\Plat;
 use App\Models\RatingRestaurant;
 
 class RestaurantController extends Controller
@@ -16,8 +17,8 @@ class RestaurantController extends Controller
     public function index()
     {
         return Restaurant::leftJoin('rating_restaurant', 'restaurants.id', '=', 'rating_restaurant.id_restaurant')
-                    ->groupBy('id_restaurant', 'name', 'workhours', 'adress', 'picture', 'email_gestionnaire', 'phone')
-                    ->select('id_restaurant', 'name', 'workhours', 'adress', 'picture', 'email_gestionnaire', 'phone', RatingRestaurant::raw('AVG(rating)'))
+                    ->groupBy('restaurants.id', 'name', 'workhours', 'adress', 'picture', 'email_gestionnaire', 'phone')
+                    ->select('restaurants.id', 'name', 'workhours', 'adress', 'picture', 'email_gestionnaire', 'phone', RatingRestaurant::raw('ROUND(AVG(rating), 1) AS rating'))
                     ->get(); 
     }
 
@@ -33,14 +34,21 @@ class RestaurantController extends Controller
             'name' => 'required|string',
             'phone' => 'required|integer|unique:restaurants,phone',
             'adress' => 'required|string',
-            'picture' => 'string',
             'workhours' => 'required|string',
             'email_gestionnaire' => 'required|string|unique:restaurants,email_gestionnaire',
         ]);
 
+        if ($request->hasFile('file')) {
+
+            $request->validate([
+                'image' => 'mimes:jpeg,bmp,png,jpg' 
+            ]);
+
+            $request->file->store('images', 'public');
+
         $restaurant = Restaurant::create([
             'name' => $fields['name'],
-            'picture' => $fields['picture'],
+            'picture' => $request->file->hashName(),
             'email_gestionnaire' => $fields['email_gestionnaire'],
             'adress' => $fields['adress'],
             'phone' => $fields['phone'],
@@ -48,6 +56,15 @@ class RestaurantController extends Controller
         ]);
 
         return response($restaurant, 201);
+
+        }
+        else{
+            return response([
+                'message' => 'format d\'image non reconnu'
+            ], 401);
+        } 
+        
+        
     }
 
     /**
@@ -58,7 +75,11 @@ class RestaurantController extends Controller
      */
     public function show($id)
     {
-        return Restaurant::where('id', $id)->get();
+        return Restaurant::leftJoin('rating_restaurant', 'restaurants.id', '=', 'rating_restaurant.id_restaurant')
+                        ->groupBy('id_restaurant', 'name', 'workhours', 'adress', 'picture', 'email_gestionnaire', 'phone')
+                        ->where('restaurants.id', $id)
+                        ->select('id_restaurant', 'name', 'workhours', 'adress', 'picture', 'email_gestionnaire', 'phone', RatingRestaurant::raw('ROUND(AVG(rating), 1) AS rating'))
+                        ->get();
     }
 
     /**
@@ -70,9 +91,36 @@ class RestaurantController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $restaurant = Restaurant::find($id);
-        $restaurant->update($request->all());
-        return $restaurant;
+
+        $fields = $request->validate([
+            'name' => 'required|string',
+            'phone' => 'required|integer',
+            'adress' => 'required|string',
+            'workhours' => 'required|string',
+        ]);
+
+        if ($request->hasFile('file')) {
+
+            $request->validate([
+                'image' => 'mimes:jpeg,bmp,png,jpg' 
+            ]);
+
+            $request->file->store('images', 'public');
+
+            $restaurant = Restaurant::where('id', $id)->update(array(
+                'picture' => $request->file->hashName(),
+            ));
+        
+        }
+
+            $restaurant = Restaurant::where('id', $id)->update(array(
+                'name' => $fields['name'],
+                'adress' => $fields['adress'],
+                'phone' => $fields['phone'],
+                'workhours' => $fields['workhours'],
+            ));
+            return $restaurant;
+
     }
 
     /**
@@ -90,4 +138,41 @@ class RestaurantController extends Controller
     {
         return Restaurant::where('name', 'like', '%'.$name.'%')->get();
     }
+
+    public function upload(Request $request, $id, $type){
+
+        if($type == 'restaurant')
+        {
+            $has_file = $request->hasFile('file');
+            if ($request->hasFile('file')) {
+
+                $request->validate([
+                    'image' => 'mimes:jpeg,bmp,png,jpg' 
+                ]);
+    
+                $request->file->store('images', 'public');
+    
+                $restaurant = Restaurant::where('id', $id)->update(array(
+                    'picture' => $request->file->hashName(),
+                ));
+        }
+        }
+        elseif($type == 'plat'){
+
+            if ($request->hasFile('file')) {
+
+                $request->validate([
+                    'image' => 'mimes:jpeg,bmp,png,jpg' 
+                ]);
+    
+                $request->file->store('images', 'public');
+
+                $restaurant = Plat::where('id', $id)->update(array(        
+                    'picture' => $request->file->hashName(),
+                ));
+            }
+        }
+        
+
+}
 }

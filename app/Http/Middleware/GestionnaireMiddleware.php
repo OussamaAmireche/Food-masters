@@ -16,7 +16,7 @@ class GestionnaireMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        if (auth()->user()->tokenCan('role:Gestionnaire')) {
+        if (auth()->user()->tokenCan('role:gestionnaire')) {
             return $next($request);
         }
         return response()->json('Not Authorized', 401);

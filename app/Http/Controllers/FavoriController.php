@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Favori;
+use App\Models\RatingPlat;
 
 class FavoriController extends Controller
 {
@@ -46,10 +47,12 @@ class FavoriController extends Controller
      */
     public function show($email)
     {
-        return Favori::where('email_client', $email)
+        return Favori::where('favoris.email_client', $email)
                     ->join('plats', 'plats.id', '=', 'favoris.id_plat')
+                    ->leftJoin('rating_plat', 'plats.id', '=', 'rating_plat.id_plat')
                     ->join('restaurants', 'restaurants.id', '=', 'plats.id_restaurant')
-                    ->select('id_plat', 'plats.name AS name_plat', 'restaurants.name AS name_restaurant', 'plats.picture AS picture')
+                    ->groupBy('favoris.id_plat', 'plats.name', 'plats.picture', 'restaurants.name', 'ingredients', 'price')
+                    ->select('favoris.id_plat', 'plats.name AS name_plat', 'restaurants.name AS name_restaurant', 'price', 'plats.picture AS picture', 'ingredients', RatingPlat::raw('AVG(rating)'))
                     ->get();
     }
 

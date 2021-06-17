@@ -37,8 +37,12 @@ Route::post('/gestionnaire/login', [AuthGestionnaireController::class, 'login'])
 Route::middleware(['auth:sanctum', 'type.client'])->group(function () {
     // authentification
     Route::post('/client/logout', [AuthClientController::class, 'logout']);
-    Route::put('/client/update/{email}', [AuthClientController::class, 'update']);
+    Route::post('/client/update/{email}', [AuthClientController::class, 'update']);
     Route::post('/gestionnaire/logout', [AuthGestionnaireController::class, 'logout']);
+
+    
+    Route::get('/client/{email}', [AuthClientController::class, 'show']);
+    Route::get('/gestionnaire/{email}', [AuthGestionnaireController::class, 'show']);
 
     //categories
     Route::get('/categories', [CategorieController::class, 'index']);
@@ -48,7 +52,7 @@ Route::middleware(['auth:sanctum', 'type.client'])->group(function () {
     Route::get('/restaurant', [RestaurantController::class, 'index']);
     Route::get('/restaurant/search/{name}', [RestaurantController::class, 'search']);
     Route::post('/restaurant/store', [RestaurantController::class, 'store']);
-    Route::put('/restaurant/update/{id}', [RestaurantController::class, 'update']);
+    Route::post('/restaurant/update/{id}', [RestaurantController::class, 'update']);
     Route::delete('/restaurant/destroy/{id}', [RestaurantController::class, 'destroy']);
     Route::get('/restaurant/{id}', [RestaurantController::class, 'show']);
 
@@ -57,7 +61,7 @@ Route::middleware(['auth:sanctum', 'type.client'])->group(function () {
     Route::get('/plat/restaurant/{id}', [PlatController::class, 'index2']);
     Route::get('/plat/search/{name}', [PlatController::class, 'search']);
     Route::post('/plat/store', [PlatController::class, 'store']);
-    Route::put('/plat/update/{id}', [PlatController::class, 'update']);
+    Route::post('/plat/update/{id}', [PlatController::class, 'update']);
     Route::delete('/plat/destroy/{id}', [PlatController::class, 'destroy']);
     Route::get('/plat/show/{id}', [PlatController::class, 'show']);
 
@@ -85,5 +89,12 @@ Route::middleware(['auth:sanctum', 'type.client'])->group(function () {
     Route::post('/commande/store', [CommandeController::class, 'store']);
     Route::post('/commande/accept/{id}', [CommandeController::class, 'accept']);
     Route::post('/commande/refuser/{id}', [CommandeController::class, 'refuser']);
-    Route::delete('/commande/destroy/{id}', [CommandeController::class, 'destroy']);
+    Route::post('/commande/annuler/{id}', [CommandeController::class, 'annuler']);
+    Route::post('/commande/supprimer/{id}', [CommandeController::class, 'supprimer']);
+    Route::get('/commande/gestionnaire/en_attente/{id}', [CommandeController::class, 'en_attente_gestionnaire']);
+    Route::post('/gestionnaire/update/{email}', [AuthGestionnaireController::class, 'update']);
+    Route::get('/commande/gestionnaire/{id}', [CommandeController::class, 'show_gestionnaire']);
+
+    
 });
+Route::post('/upload/{id}/{type}', [RestaurantController::class, 'upload']);
