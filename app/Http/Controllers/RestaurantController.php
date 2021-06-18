@@ -152,9 +152,9 @@ class RestaurantController extends Controller
     
                 $request->file->store('images', 'public');
     
-                $restaurant = Restaurant::where('id', $id)->update(array(
-                    'picture' => $request->file->hashName(),
-                ));
+                $restaurant = Restaurant::find($id);
+                $restaurant->picture = $request->file->hashName();
+                $restaurant->save();
         }
         }
         elseif($type == 'plat'){
@@ -167,9 +167,9 @@ class RestaurantController extends Controller
     
                 $request->file->store('images', 'public');
 
-                $restaurant = Plat::where('id', $id)->update(array(        
-                    'picture' => $request->file->hashName(),
-                ));
+                $plat = Plat::find($id);        
+                $plat->picture = $request->file->hashName();
+                $plat->save();
             }
         }
         
